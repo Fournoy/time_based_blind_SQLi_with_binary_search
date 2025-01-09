@@ -105,10 +105,10 @@ Permet donc de créer une condition à partir de cela.
 
 AXE D'AMELIORATION SECONDAIRE:
 L'autre axe d'amélioration est tourné vers l'automatisation du changement d'indice 
-(bien que cela dépende de la payloads envoyé)
+(bien que cela dépende de la payloads envoyée)
 
 AXE D'AMELIORATION TERTIAIRE:
-Mettre en place un multithreading pour tester les lettres et les chiffres en même temps afin de gagner en temps.
+Mettre en place un multithreading pour tester les lettres et les chiffres en même temps afin de gagner du temps.
 
 
 
